@@ -1,20 +1,29 @@
-package com.wellsfargo.oas.security;
+package com.wellsfargo.oas.security.config;
 
 import java.util.Arrays;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.ProviderManager;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import com.wellsfargo.oas.security.AccessPhraseAuthProvider;
+import com.wellsfargo.oas.security.OasUserDetails;
+import com.wellsfargo.oas.security.SamlAuthFilter;
+
 @Configuration
 @EnableWebSecurity
+@EnableAutoConfiguration(exclude = { 
+        org.springframework.boot.autoconfigure.security.SecurityAutoConfiguration.class 
+    })
 public class WebSecurityConfig {
 
   @Configuration
@@ -37,7 +46,7 @@ public class WebSecurityConfig {
           .addFilterAt(authFilter(), UsernamePasswordAuthenticationFilter.class)
           .addFilterAfter(new SamlAuthFilter(),
               UsernamePasswordAuthenticationFilter.class).logout().permitAll();
-    }
+    }    
 
     @Bean
     UsernamePasswordAuthenticationFilter authFilter() {

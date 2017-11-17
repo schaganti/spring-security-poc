@@ -1,4 +1,4 @@
-package com.wellsfargo.oas.security;
+package com.wellsfargo.oas.security.config;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;

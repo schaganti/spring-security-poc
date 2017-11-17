@@ -6,12 +6,12 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 
-final class AccessPhraseAuthProvider implements AuthenticationProvider {
+public class AccessPhraseAuthProvider implements AuthenticationProvider {
 
   /**
    * @param webSecurityConfig
    */
-  AccessPhraseAuthProvider() {
+  public AccessPhraseAuthProvider() {
 
   }
 

@@ -9,7 +9,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-class SamlAuthFilter extends UsernamePasswordAuthenticationFilter {
+public class SamlAuthFilter extends UsernamePasswordAuthenticationFilter {
 
   @Override
   public Authentication attemptAuthentication(HttpServletRequest request,

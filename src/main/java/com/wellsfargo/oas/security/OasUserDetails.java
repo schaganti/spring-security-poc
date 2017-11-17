@@ -10,7 +10,7 @@ public class OasUserDetails {
 
   String dob;
 
-  public OasUserDetails(String fn, String ssn, String ap, String dob) {
+  public OasUserDetails(String fn, String ssn, String ap, String dob, String requestUrl) {
 
     this.fn = fn;
     this.ssn = ssn;

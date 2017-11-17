@@ -24,10 +24,19 @@ public class WebSecurityConfig {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
 
-      http.authorizeRequests().antMatchers("/", "/home").permitAll().anyRequest()
-          .authenticated().and().formLogin().loginPage("/login").permitAll().and()
-          .addFilterAt(authFilter(), UsernamePasswordAuthenticationFilter.class).logout()
-          .permitAll();
+      http.authorizeRequests()
+          .antMatchers("/", "/home")
+          .permitAll()
+          .anyRequest()
+          .authenticated()
+          .and()
+          .formLogin()
+          .loginPage("/login")
+          .permitAll()
+          .and()
+          .addFilterAt(authFilter(), UsernamePasswordAuthenticationFilter.class)
+          .addFilterAfter(new SamlAuthFilter(),
+              UsernamePasswordAuthenticationFilter.class).logout().permitAll();
     }
 
     @Bean
@@ -37,7 +46,8 @@ public class WebSecurityConfig {
 
       usernamePasswordAuthenticationFilter.setAuthenticationDetailsSource((
           HttpServletRequest req) -> new OasUserDetails(req.getParameter("fn"), req
-          .getParameter("ssn"), req.getParameter("ap"), req.getParameter("dob")));
+          .getParameter("ssn"), req.getParameter("ap"), req.getParameter("dob"), req
+          .getRequestURI()));
 
       usernamePasswordAuthenticationFilter.setAuthenticationManager(new ProviderManager(
           Arrays.asList(new AccessPhraseAuthProvider())));

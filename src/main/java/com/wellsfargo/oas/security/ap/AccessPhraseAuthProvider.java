@@ -1,10 +1,12 @@
-package com.wellsfargo.oas.security;
+package com.wellsfargo.oas.security.ap;
 
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+
+import com.wellsfargo.oas.security.OasUserDetails;
 
 public class AccessPhraseAuthProvider implements AuthenticationProvider {
 

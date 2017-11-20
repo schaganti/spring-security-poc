@@ -1,29 +1,31 @@
 package com.wellsfargo.oas.security.config;
 
+import java.io.IOException;
 import java.util.Arrays;
 
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.ProviderManager;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-import com.wellsfargo.oas.security.AccessPhraseAuthProvider;
 import com.wellsfargo.oas.security.OasUserDetails;
-import com.wellsfargo.oas.security.SamlAuthFilter;
+import com.wellsfargo.oas.security.ap.AccessPhraseAuthProvider;
+import com.wellsfargo.oas.security.saml.SamlAuthFilter;
 
 @Configuration
 @EnableWebSecurity
-@EnableAutoConfiguration(exclude = { 
-        org.springframework.boot.autoconfigure.security.SecurityAutoConfiguration.class 
-    })
+@EnableAutoConfiguration(exclude = {org.springframework.boot.autoconfigure.security.SecurityAutoConfiguration.class })
 public class WebSecurityConfig {
 
   @Configuration
@@ -34,7 +36,7 @@ public class WebSecurityConfig {
     protected void configure(HttpSecurity http) throws Exception {
 
       http.authorizeRequests()
-          .antMatchers("/", "/home")
+          .antMatchers("/", "/home", "/error")
           .permitAll()
           .anyRequest()
           .authenticated()
@@ -43,10 +45,26 @@ public class WebSecurityConfig {
           .loginPage("/login")
           .permitAll()
           .and()
-          .addFilterAt(authFilter(), UsernamePasswordAuthenticationFilter.class)
-          .addFilterAfter(new SamlAuthFilter(),
+          .addFilterBefore(authFilter(), UsernamePasswordAuthenticationFilter.class)
+          .addFilterBefore(getSamlAuthFilter(),
               UsernamePasswordAuthenticationFilter.class).logout().permitAll();
-    }    
+    }
+
+    private SamlAuthFilter getSamlAuthFilter() {
+
+      SamlAuthFilter samlAuthFilter = new SamlAuthFilter("/samlEntry");
+      samlAuthFilter.setAuthenticationFailureHandler(new AuthenticationFailureHandler() {
+
+        @Override
+        public void onAuthenticationFailure(HttpServletRequest request,
+            HttpServletResponse response, AuthenticationException exception)
+            throws IOException, ServletException {
+
+          response.sendRedirect("/error");
+        }
+      });
+      return samlAuthFilter;
+    }
 
     @Bean
     UsernamePasswordAuthenticationFilter authFilter() {

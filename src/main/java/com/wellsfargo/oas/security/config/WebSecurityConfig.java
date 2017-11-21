@@ -35,7 +35,9 @@ public class WebSecurityConfig {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
 
-      http.authorizeRequests()
+      http.csrf()
+          .and()
+          .authorizeRequests()
           .antMatchers("/", "/home", "/error")
           .permitAll()
           .anyRequest()

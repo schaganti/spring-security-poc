@@ -14,7 +14,7 @@ public class AccessPhraseAuthenticationDetailsSource implements
   @Override
   public AccessPhraseUserDetails buildDetails(HttpServletRequest req) {
 
-    if ("application/json".equals(req.getHeader("Content-Type"))) {
+    if ("application/json".equals(req.getHeader("content-type"))) {
 
       return unmarshallJson(req);
     }

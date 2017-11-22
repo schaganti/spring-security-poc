@@ -15,6 +15,7 @@ import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -35,7 +36,9 @@ public class WebSecurityConfig {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
 
-      http.authorizeRequests()
+      http.csrf()
+          .disable()
+          .authorizeRequests()
           .antMatchers("/", "/home", "/error")
           .permitAll()
           .anyRequest()
@@ -50,6 +53,30 @@ public class WebSecurityConfig {
               UsernamePasswordAuthenticationFilter.class).logout().permitAll();
     }
 
+    /*
+     * private AccessDecisionManager accessDecisionManager() {
+     * 
+     * return new UnanimousBased(Arrays.asList(getCustomVoter()));
+     * 
+     * }
+     * 
+     * private AccessDecisionVoter<? extends Object> getCustomVoter() {
+     * 
+     * return new AccessDecisionVoter<Object>() {
+     * 
+     * @Override public boolean supports(ConfigAttribute attribute) {
+     * 
+     * // TODO Auto-generated method stub return true; }
+     * 
+     * @Override public boolean supports(Class<?> clazz) {
+     * 
+     * // TODO Auto-generated method stub return true; }
+     * 
+     * @Override public int vote(Authentication authentication, Object object,
+     * Collection<ConfigAttribute> attributes) {
+     * 
+     * return AccessDecisionVoter.ACCESS_GRANTED; } }; }
+     */
     private SamlAuthFilter getSamlAuthFilter() {
 
       SamlAuthFilter samlAuthFilter = new SamlAuthFilter("/samlEntry");
@@ -73,6 +100,20 @@ public class WebSecurityConfig {
 
       usernamePasswordAuthenticationFilter
           .setAuthenticationDetailsSource(new AccessPhraseAuthenticationDetailsSource());
+
+      usernamePasswordAuthenticationFilter.setAuthenticationSuccessHandler((
+          HttpServletRequest request, HttpServletResponse response,
+          Authentication authentication) -> {
+
+        if ("application/json".equals(request.getHeader("content-type"))) {
+
+          response.getWriter().write("This is working fine");
+        }
+        else {
+          response.sendRedirect("/hello");
+        }
+
+      });
 
       usernamePasswordAuthenticationFilter.setAuthenticationManager(new ProviderManager(
           Arrays.asList(new AccessPhraseAuthProvider())));

@@ -19,8 +19,8 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-import com.wellsfargo.oas.security.OasUserDetails;
 import com.wellsfargo.oas.security.ap.AccessPhraseAuthProvider;
+import com.wellsfargo.oas.security.ap.AccessPhraseAuthenticationDetailsSource;
 import com.wellsfargo.oas.security.saml.SamlAuthFilter;
 
 @Configuration
@@ -35,9 +35,7 @@ public class WebSecurityConfig {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
 
-      http.csrf()
-          .and()
-          .authorizeRequests()
+      http.authorizeRequests()
           .antMatchers("/", "/home", "/error")
           .permitAll()
           .anyRequest()
@@ -73,10 +71,8 @@ public class WebSecurityConfig {
 
       UsernamePasswordAuthenticationFilter usernamePasswordAuthenticationFilter = new UsernamePasswordAuthenticationFilter();
 
-      usernamePasswordAuthenticationFilter.setAuthenticationDetailsSource((
-          HttpServletRequest req) -> new OasUserDetails(req.getParameter("fn"), req
-          .getParameter("ssn"), req.getParameter("ap"), req.getParameter("dob"), req
-          .getRequestURI()));
+      usernamePasswordAuthenticationFilter
+          .setAuthenticationDetailsSource(new AccessPhraseAuthenticationDetailsSource());
 
       usernamePasswordAuthenticationFilter.setAuthenticationManager(new ProviderManager(
           Arrays.asList(new AccessPhraseAuthProvider())));

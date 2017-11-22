@@ -6,8 +6,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 
-import com.wellsfargo.oas.security.OasUserDetails;
-
 public class AccessPhraseAuthProvider implements AuthenticationProvider {
 
   /**
@@ -27,7 +25,7 @@ public class AccessPhraseAuthProvider implements AuthenticationProvider {
   public Authentication authenticate(Authentication authentication)
       throws AuthenticationException {
 
-    OasUserDetails userDetails = (OasUserDetails) authentication.getDetails();
+    AccessPhraseUserDetails userDetails = (AccessPhraseUserDetails) authentication.getDetails();
     if (userDetails.getFn().equalsIgnoreCase("fn")) {
       return new UsernamePasswordAuthenticationToken("fn", authentication.getDetails(),
           null);

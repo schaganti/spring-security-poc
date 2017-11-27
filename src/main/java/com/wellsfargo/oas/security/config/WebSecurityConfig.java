@@ -21,6 +21,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
@@ -36,8 +37,13 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
   @Override
   protected void configure(HttpSecurity http) throws Exception {
 
-    http.csrf().disable().authorizeRequests().antMatchers("/", "/home", "/error")
-        .permitAll().anyRequest().authenticated()
+    http.csrf()
+        .disable()
+        .authorizeRequests()
+        .antMatchers("/", "/home", "/error")
+        .permitAll()
+        .anyRequest()
+        .authenticated()
         .withObjectPostProcessor(new ObjectPostProcessor<AffirmativeBased>() {
 
           @Override
@@ -48,9 +54,28 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
             // WebExpressionVoter
             return affirmativeBased;
           }
+        })
+        .and()
+        .exceptionHandling()
+        .authenticationEntryPoint(new AuthenticationEntryPoint() {
+
+          @Override
+          public void commence(HttpServletRequest request, HttpServletResponse response,
+              AuthenticationException authException) throws IOException, ServletException {
+
+            if ("application/json".equals(request.getHeader("content-type"))) {
+
+              response.getWriter().write("This is working fine");
+            }
+            else {
+              response.sendRedirect("/login");
+            }
+
+          }
         }).and().formLogin().loginPage("/login").permitAll().and()
         .addFilterBefore(authFilter(), UsernamePasswordAuthenticationFilter.class)
-        .addFilterBefore(getSamlAuthFilter(), UsernamePasswordAuthenticationFilter.class)
+        // .addFilterBefore(getSamlAuthFilter(),
+        // UsernamePasswordAuthenticationFilter.class)
         .logout().permitAll();
   }
 
@@ -84,14 +109,12 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
       @Override
       public boolean supports(Class clazz) {
 
-        // TODO Auto-generated method stub
         return true;
       }
 
       @Override
       public int vote(Authentication authentication, Object object, Collection attributes) {
 
-        // TODO Auto-generated method stub
         return AccessDecisionVoter.ACCESS_ABSTAIN;
       }
     };
@@ -119,9 +142,30 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     });
 
+    usernamePasswordAuthenticationFilter.setAuthenticationFailureHandler((
+        HttpServletRequest request, HttpServletResponse response,
+        AuthenticationException authentication) -> {
+
+      if ("application/json".equals(request.getHeader("content-type"))) {
+
+        response.getWriter().write("This is working fine");
+      }
+      else {
+        response.sendRedirect("/login");
+      }
+
+    });
+
+    AccessPhraseAuthProvider accessPhraseAuthProvider = accessPhraseAuthProvider();
     usernamePasswordAuthenticationFilter.setAuthenticationManager(new ProviderManager(
-        Arrays.asList(new AccessPhraseAuthProvider())));
+        Arrays.asList(accessPhraseAuthProvider)));
 
     return usernamePasswordAuthenticationFilter;
+  }
+
+  @Bean
+  AccessPhraseAuthProvider accessPhraseAuthProvider() {
+
+    return new AccessPhraseAuthProvider();
   }
 }

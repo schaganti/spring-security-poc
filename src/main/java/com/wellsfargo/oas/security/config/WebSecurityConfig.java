@@ -74,8 +74,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
           }
         }).and().formLogin().loginPage("/login").permitAll().and()
         .addFilterBefore(authFilter(), UsernamePasswordAuthenticationFilter.class)
-        // .addFilterBefore(getSamlAuthFilter(),
-        // UsernamePasswordAuthenticationFilter.class)
+        .addFilterBefore(getSamlAuthFilter(), UsernamePasswordAuthenticationFilter.class)
         .logout().permitAll();
   }
 

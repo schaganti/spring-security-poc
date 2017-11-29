@@ -25,7 +25,8 @@ public class AccessPhraseAuthProvider implements AuthenticationProvider {
   public Authentication authenticate(Authentication authentication)
       throws AuthenticationException {
 
-    AccessPhraseUserDetails userDetails = (AccessPhraseUserDetails) authentication.getDetails();
+    AccessPhraseUserDetails userDetails = (AccessPhraseUserDetails) authentication
+        .getDetails();
     if (userDetails.getFn().equalsIgnoreCase("fn")) {
       return new UsernamePasswordAuthenticationToken("fn", authentication.getDetails(),
           null);

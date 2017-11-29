@@ -1,5 +1,6 @@
 package com.wellsfargo.oas.security.saml;
 
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -21,6 +22,7 @@ public class SamlAuthFilter extends AbstractAuthenticationProcessingFilter {
       HttpServletResponse response) throws AuthenticationException {
 
     if ("authenticated".equals(request.getParameter("saml"))) {
+      response.addCookie(new Cookie("kcookie", "authenticated"));
       return new UsernamePasswordAuthenticationToken(request, null, null);
     }
     throw new AuthenticationCredentialsNotFoundException("asas");

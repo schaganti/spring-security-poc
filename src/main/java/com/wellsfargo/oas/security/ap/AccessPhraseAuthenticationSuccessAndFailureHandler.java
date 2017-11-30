@@ -21,7 +21,7 @@ public class AccessPhraseAuthenticationSuccessAndFailureHandler implements
       ServletException {
 
     response.addCookie(new Cookie("kcookie", "authenticated"));
-    if ("application/json".equals(request.getHeader("content-type"))) {
+    if (isAjaxCall(request)) {
 
       response.getWriter().write("This is working fine");
     }
@@ -36,7 +36,7 @@ public class AccessPhraseAuthenticationSuccessAndFailureHandler implements
       HttpServletResponse response, AuthenticationException exception)
       throws IOException, ServletException {
 
-    if ("application/json".equals(request.getHeader("content-type"))) {
+    if (isAjaxCall(request)) {
 
       response.getWriter().write("This is working fine");
     }
@@ -45,5 +45,9 @@ public class AccessPhraseAuthenticationSuccessAndFailureHandler implements
     }
 
   }
+
+private boolean isAjaxCall(HttpServletRequest request) {
+	return "application/json".equals(request.getHeader("content-type"));
+}
 
 }

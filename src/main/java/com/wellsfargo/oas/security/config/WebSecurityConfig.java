@@ -14,7 +14,6 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
-import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.logout.CompositeLogoutHandler;
 import org.springframework.security.web.authentication.logout.CookieClearingLogoutHandler;
@@ -46,17 +45,14 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         .anyRequest()
           .access("isFullyAuthenticated() and @kCookieCheck.test(request)")
       .and()
-        .formLogin()
-            .loginPage("/login")
-      .and()
         .exceptionHandling()
           .authenticationEntryPoint(new OasAuthenticationAndAuthorizationErrorHandler())
           .accessDeniedHandler(new OasAuthenticationAndAuthorizationErrorHandler())
       .and()
-          .addFilterBefore(accessPhraseAuthFilter(), UsernamePasswordAuthenticationFilter.class)
-          .addFilterBefore(samlAuthFilter(), UsernamePasswordAuthenticationFilter.class)
+        .addFilterBefore(accessPhraseAuthFilter(), UsernamePasswordAuthenticationFilter.class)
+        .addFilterBefore(samlAuthFilter(), UsernamePasswordAuthenticationFilter.class)
       .logout()
-          .addLogoutHandler(logOutHandler());
+        .addLogoutHandler(logOutHandler());
   }
 
   private LogoutHandler logOutHandler() {
@@ -97,10 +93,10 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         .setAuthenticationDetailsSource(new AccessPhraseAuthenticationDetailsSource());
 
     usernamePasswordAuthenticationFilter
-        .setAuthenticationSuccessHandler(accessPhraseAuthenticationSuccessHandler());
+        .setAuthenticationSuccessHandler(accessPhraseAuthenticationHandler());
 
     usernamePasswordAuthenticationFilter
-        .setAuthenticationFailureHandler(accessPhraseAuthenticationFailureHandler());
+        .setAuthenticationFailureHandler(accessPhraseAuthenticationHandler());
 
     usernamePasswordAuthenticationFilter.setAuthenticationManager(new ProviderManager(
         Arrays.asList(accessPhraseAuthProvider())));
@@ -109,13 +105,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
   }
 
   @Bean
-  AuthenticationSuccessHandler accessPhraseAuthenticationSuccessHandler() {
-
-    return new AccessPhraseAuthenticationSuccessAndFailureHandler();
-  }
-
-  @Bean
-  AuthenticationFailureHandler accessPhraseAuthenticationFailureHandler() {
+  AccessPhraseAuthenticationSuccessAndFailureHandler accessPhraseAuthenticationHandler() {
 
     return new AccessPhraseAuthenticationSuccessAndFailureHandler();
   }

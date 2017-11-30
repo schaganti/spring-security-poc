@@ -1,14 +1,15 @@
 package com.wellsfargo.oas.security.config;
 
 import java.util.Arrays;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
+
+import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.access.AccessDecisionVoter;
-import org.springframework.security.access.vote.AffirmativeBased;
 import org.springframework.security.authentication.ProviderManager;
-import org.springframework.security.config.annotation.ObjectPostProcessor;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
@@ -20,15 +21,13 @@ import org.springframework.security.web.authentication.logout.CookieClearingLogo
 import org.springframework.security.web.authentication.logout.LogoutHandler;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 
-import com.wellsfargo.oas.security.OasAuthenticationEntryPoint;
+import com.wellsfargo.oas.security.OasAuthenticationAndAuthorizationErrorHandler;
 import com.wellsfargo.oas.security.ap.AccessPhraseAuthProvider;
 import com.wellsfargo.oas.security.ap.AccessPhraseAuthenticationDetailsSource;
 import com.wellsfargo.oas.security.ap.AccessPhraseAuthenticationSuccessAndFailureHandler;
-import com.wellsfargo.oas.security.saml.SamlAccessDecisionVoter;
 import com.wellsfargo.oas.security.saml.SamlAuthFilter;
 import com.wellsfargo.oas.security.saml.SamlAuthenticationProvider;
 import com.wellsfargo.oas.security.saml.SamlAuthenticationSuccessAndFailureHandler;
-import com.wellsfargo.oas.security.saml.SamlObjectPostProcessor;
 
 @Configuration
 @EnableWebSecurity
@@ -38,26 +37,26 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
   @Override
   protected void configure(HttpSecurity http) throws Exception {
 
-    http.csrf()
+    http
+      .csrf()
         .disable()
-        .authorizeRequests()
-        .antMatchers("/", "/home", "/error")
-        .permitAll()
+      .authorizeRequests()
+        .antMatchers("/", "/home", "/error", "/accessDenied", "/login")
+          .permitAll()
         .anyRequest()
-        .authenticated()
-        .withObjectPostProcessor(samlObjectPostProcessor())
-        .and()
-        .exceptionHandling()
-        .authenticationEntryPoint(new OasAuthenticationEntryPoint())
-        .and()
+          .access("isFullyAuthenticated() and @kCookieCheck.test(request)")
+      .and()
         .formLogin()
-        .loginPage("/login")
-        .permitAll()
-        .and()
-        .addFilterBefore(accessPhraseAuthFilter(),
-            UsernamePasswordAuthenticationFilter.class)
-        .addFilterBefore(samlAuthFilter(), UsernamePasswordAuthenticationFilter.class)
-        .logout().addLogoutHandler(logOutHandler()).permitAll();
+            .loginPage("/login")
+      .and()
+        .exceptionHandling()
+          .authenticationEntryPoint(new OasAuthenticationAndAuthorizationErrorHandler())
+          .accessDeniedHandler(new OasAuthenticationAndAuthorizationErrorHandler())
+      .and()
+          .addFilterBefore(accessPhraseAuthFilter(), UsernamePasswordAuthenticationFilter.class)
+          .addFilterBefore(samlAuthFilter(), UsernamePasswordAuthenticationFilter.class)
+      .logout()
+          .addLogoutHandler(logOutHandler());
   }
 
   private LogoutHandler logOutHandler() {
@@ -65,18 +64,6 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     return new CompositeLogoutHandler(Arrays.asList(new SecurityContextLogoutHandler(),
         new CookieClearingLogoutHandler("kcookie")));
 
-  }
-
-  @Bean
-  public ObjectPostProcessor<AffirmativeBased> samlObjectPostProcessor() {
-
-    return new SamlObjectPostProcessor(samlAccessDecisionVoter());
-  }
-
-  @Bean
-  public AccessDecisionVoter<Object> samlAccessDecisionVoter() {
-
-    return new SamlAccessDecisionVoter();
   }
 
   @Bean
@@ -137,5 +124,19 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
   AccessPhraseAuthProvider accessPhraseAuthProvider() {
 
     return new AccessPhraseAuthProvider();
+
+  }
+
+  @Bean
+  Predicate<HttpServletRequest> kCookieCheck() {
+
+    return request -> {
+      if (request.getCookies() != null) {
+        return Stream.of(request.getCookies()).anyMatch(c -> {
+          return c.getName().equals("kcookie");
+        });
+      }
+      return false;
+    };
   }
 }

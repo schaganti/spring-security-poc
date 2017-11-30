@@ -21,6 +21,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.io.UnsupportedEncodingException;
 
+import javax.servlet.http.Cookie;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -38,7 +40,7 @@ import com.wellsfargo.oas.security.ap.AccessPhraseAuthProvider;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
-public class SecurityApplicationTests {
+public class WebSecurityConfigTest {
 
   @Autowired
   private WebApplicationContext context;
@@ -64,7 +66,8 @@ public class SecurityApplicationTests {
 
     mvc.perform(
         post("/login").param("fn", "fn").param("ssn", "ssn").param("ap", "ap")
-            .param("dob", "dob")).andExpect(authenticated());
+            .param("dob", "dob")).andExpect(authenticated())
+        .andExpect(cookie().exists("kcookie"));
 
     verify(mockAccessPhraseAuthProvider, times(1)).authenticate(any());
   }
@@ -84,10 +87,11 @@ public class SecurityApplicationTests {
     verify(mockAccessPhraseAuthProvider, times(1)).authenticate(any());
   }
 
+  @Test
   public void requestShouldBeRedirectedToLoginPageWhenProtectedResourceIsAccessedWithoutAuthentication()
       throws UnsupportedEncodingException, Exception {
 
-    mvc.perform(get("/hello")).andExpect(redirectedUrl("/login"));
+    mvc.perform(get("/hello")).andExpect(redirectedUrl("/accessDenied"));
 
   }
 
@@ -105,13 +109,23 @@ public class SecurityApplicationTests {
   public void protectedResourceShouldBeAccessableToAuthenticatedUser() throws Exception {
 
     mvc.perform(
-        get("/hello")
+        get("/hello").cookie(new Cookie("kcookie", "authenticated"))
             .with(
                 authentication(new UsernamePasswordAuthenticationToken("fn", "details",
                     null)))).andExpect(status().isOk())
-        .andExpect(content().string(containsString("Hello World")));
+        .andExpect(content().string(containsString("Protected Page")));
 
   }
+  
+  @Test
+  public void protectedResourceAccessedAfterAuthenticationWithoutKCookieShouldRenderAccessDeniedPage() throws Exception {
+
+    mvc.perform(get("/hello")
+            .with(
+                authentication(new UsernamePasswordAuthenticationToken("fn", "details",
+                    null)))).andExpect(redirectedUrl("/accessDenied"));
+  }
+
 
   @Test
   public void samlEntryShouldBeAuthenticatedSuccessfullyAndCreateKCookie()

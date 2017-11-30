@@ -4,6 +4,8 @@
         <title>Spring Security Example</title>
     </head>
     <body>
-        <h1>Error Page</h1>
+        <h1>Access Denied, your session might be timed out</h1>
+        <p>Click <a th:href="@{/login}">here</a> to login again</p>
+        <p>Click <a th:href="@{/samlEntry?saml=authenticated}">here</a> to login using saml</p>
     </body>
 </html>

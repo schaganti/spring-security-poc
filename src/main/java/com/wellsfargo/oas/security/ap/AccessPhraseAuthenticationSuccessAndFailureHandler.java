@@ -3,6 +3,7 @@ package com.wellsfargo.oas.security.ap;
 import java.io.IOException;
 
 import javax.servlet.ServletException;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -19,6 +20,7 @@ public class AccessPhraseAuthenticationSuccessAndFailureHandler implements
       HttpServletResponse response, Authentication authentication) throws IOException,
       ServletException {
 
+    response.addCookie(new Cookie("kcookie", "authenticated"));
     if ("application/json".equals(request.getHeader("content-type"))) {
 
       response.getWriter().write("This is working fine");
